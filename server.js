@@ -30,8 +30,10 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'view'));
 
 app.use("/api/v1", express.static("public"))
+app.use("/api", express.static("public"))
 
 app.use("/api/v1", rootRouter);
+app.use("/api", rootRouter);
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
