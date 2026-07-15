@@ -35,6 +35,12 @@ app.use("/api/v1", rootRouter);
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
+
+// Health check endpoint — used by Render to detect server crashes and auto-restart
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.get("/api/v1/about", (req, res) => {
   res.sendFile(path.join(__dirname, "view", "about.html"));
 });
@@ -51,6 +57,17 @@ app.get("/api/v1/help&support", (req, res) => {
   res.sendFile(path.join(__dirname, "view", "help&support.html"));
 });
 
+// Catch-all 404 — always return JSON so mobile app never gets HTML
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Route ${req.method} ${req.url} not found` });
+});
+
+// Global error handler — return JSON instead of HTML error pages
+app.use((err, req, res, next) => {
+  console.error('Global error handler:', err);
+  res.status(err.status || 500).json({ success: false, message: err.message || 'Internal Server Error' });
+});
+
 // Create HTTP server and attach Socket.IO
 const httpServer = createServer(app);
 const io = new SocketIO(httpServer, {
@@ -65,4 +82,15 @@ initChat(io);
 
 httpServer.listen(port, () => {
   console.log(`Server is running on port ${port}`);
+});
+
+// Auto-restart: log unhandled errors instead of silently dying
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception — server will restart:', err);
+  process.exit(1); // Render detects exit and auto-restarts the service
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Promise Rejection at:', promise, 'reason:', reason);
+  process.exit(1); // Render detects exit and auto-restarts the service
 });
