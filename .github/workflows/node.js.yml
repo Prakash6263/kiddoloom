@@ -1,0 +1,47 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load NVM & Node.js
+        run: |
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+          node -v
+          npm -v
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Create ENV File
+        run: |
+          echo "${{ secrets.ENV_FILE }}" | tr -d '\r' > .env
+          chmod 600 .env
+          ls -lah .env
+
+      - name: Start/Restart PM2 App
+        run: |
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+          if pm2 list | grep -q "server"; then
+            echo "Restarting existing PM2 instance..."
+            pm2 restart server
+          else
+            echo "Starting new PM2 instance..."
+            pm2 start server.js --name "server"
+          fi
+
+          pm2 save

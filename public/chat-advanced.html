@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced Chat with Video & Media Share</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      display: flex;
+      height: 90vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 300px;
+      background: #f5f5f5;
+      border-right: 1px solid #ddd;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .connection-status {
+      padding: 12px;
+      border-radius: 8px;
+      background: #fff;
+      border-left: 4px solid #ff6b6b;
+      font-size: 14px;
+    }
+
+    .connection-status.connected {
+      border-left-color: #51cf66;
+      background: #f1fdf4;
+    }
+
+    .auth-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .auth-section input {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .btn {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+    }
+
+    .btn-primary:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .btn-success {
+      background: #51cf66;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #40c057;
+    }
+
+    .btn-danger {
+      background: #ff6b6b;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #f03e3e;
+    }
+
+    .btn-warning {
+      background: #ffd43b;
+      color: #333;
+    }
+
+    .btn-warning:hover {
+      background: #ffdd07;
+    }
+
+    .chat-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-header {
+      padding: 15px 25px;
+      background: white;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-header h2 {
+      font-size: 18px;
+    }
+
+    .call-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .call-controls .btn {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      background: #fafafa;
+    }
+
+    .message {
+      margin-bottom: 12px;
+      display: flex;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message.own {
+      justify-content: flex-end;
+    }
+
+    .message-content {
+      max-width: 60%;
+      padding: 12px 15px;
+      border-radius: 12px;
+      font-size: 14px;
+      word-wrap: break-word;
+    }
+
+    .message.other .message-content {
+      background: white;
+      border: 1px solid #e0e0e0;
+    }
+
+    .message.own .message-content {
+      background: #667eea;
+      color: white;
+    }
+
+    .message-time {
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+      padding: 0 5px;
+    }
+
+    .message-file {
+      background: #f0f0f0;
+      padding: 8px;
+      border-radius: 6px;
+      margin: 5px 0;
+    }
+
+    .message-file a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .input-area {
+      padding: 20px;
+      background: white;
+      border-top: 1px solid #ddd;
+      display: flex;
+      gap: 10px;
+    }
+
+    .input-area input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .input-area input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .input-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      height: 20px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #999;
+      animation: bounce 1.4s infinite;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes bounce {
+      0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+      }
+      40% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .video-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      background: #000;
+    }
+
+    .video-frame {
+      width: 300px;
+      height: 225px;
+      background: #000;
+      border-radius: 8px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-frame video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .video-label {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .call-status {
+      text-align: center;
+      padding: 20px;
+      background: #fff;
+      margin-bottom: 10px;
+    }
+
+    .media-share-indicator {
+      display: inline-block;
+      padding: 8px 12px;
+      background: #ffd43b;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      margin: 5px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        height: auto;
+      }
+
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #ddd;
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+
+      .message-content {
+        max-width: 80%;
+      }
+
+      .video-frame {
+        width: 150px;
+        height: 113px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <div class="connection-status" id="statusIndicator">
+        <strong>Status:</strong> Disconnected
+      </div>
+
+      <div class="auth-section">
+        <label style="font-size: 12px; font-weight: 600">Authentication</label>
+        <input type="password" id="tokenInput" placeholder="Paste JWT token" />
+        <button class="btn btn-primary" id="connectBtn">Connect</button>
+        <button class="btn btn-danger" id="disconnectBtn" disabled>Disconnect</button>
+      </div>
+
+      <div class="auth-section">
+        <label style="font-size: 12px; font-weight: 600">Chat With</label>
+        <input type="text" id="otherId" placeholder="Other user ID" />
+        <button class="btn btn-primary" id="joinBtn">Join Chat</button>
+      </div>
+
+      <div class="auth-section">
+        <label style="font-size: 12px; font-weight: 600">My User ID</label>
+        <div style="padding: 8px; background: white; border-radius: 4px; font-size: 12px; word-break: break-all" id="myUserIdDisplay">
+          Not connected
+        </div>
+      </div>
+
+      <div class="auth-section" id="fileShareSection" style="display: none">
+        <label style="font-size: 12px; font-weight: 600">Share File</label>
+        <input type="file" id="fileInput" />
+        <button class="btn btn-warning" id="shareFileBtn">Share File</button>
+      </div>
+    </div>
+
+    <div class="chat-section">
+      <div class="chat-header">
+        <h2 id="chatTitle">Chat Application</h2>
+        <div class="call-controls">
+          <button class="btn btn-success" id="startVideoBtn" disabled>📹 Start Call</button>
+          <button class="btn btn-danger" id="endVideoBtn" disabled style="display: none">❌ End Call</button>
+          <button class="btn btn-warning" id="shareScreenBtn" disabled>🖥️ Share Screen</button>
+          <button class="btn btn-danger" id="stopShareBtn" disabled style="display: none">Stop Share</button>
+        </div>
+      </div>
+
+      <div class="messages-container" id="messages"></div>
+
+      <div id="typingIndicator" style="padding-left: 20px; height: 20px; display: none">
+        <div class="typing-indicator">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+
+      <div class="input-area">
+        <input type="text" id="messageInput" placeholder="Type a message..." />
+        <div class="input-controls">
+          <button class="btn btn-primary" id="sendBtn">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incoming Call Modal -->
+  <div id="callModal" class="modal">
+    <div class="modal-content">
+      <h3>Incoming Video Call</h3>
+      <p id="callFromUser" style="margin-top: 10px">Someone is calling...</p>
+      <div class="modal-buttons">
+        <button class="btn btn-success" id="acceptCallBtn">Accept</button>
+        <button class="btn btn-danger" id="rejectCallBtn">Reject</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Video Container -->
+  <div class="video-container" id="videoContainer" style="display: none">
+    <div class="call-status" id="callStatus">Establishing connection...</div>
+    <div class="video-grid">
+      <div class="video-frame">
+        <video id="localVideo" autoplay muted playsinline></video>
+        <div class="video-label">You</div>
+      </div>
+      <div class="video-frame">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <div class="video-label">Caller</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <script>
+    let socket;
+    let myId = null;
+    let currentCallId = null;
+    let currentCall = null;
+    let peerConnection = null;
+    let localStream = null;
+    let remoteStream = null;
+    let mediaShareActive = false;
+    let screenStream = null;
+
+    // WebRTC configuration
+    const peerConfig = {
+      iceServers: [
+        { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }
+      ]
+    };
+
+    // UI Elements
+    const statusIndicator = document.getElementById('statusIndicator');
+    const connectBtn = document.getElementById('connectBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const messagesEl = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const joinBtn = document.getElementById('joinBtn');
+    const otherIdInput = document.getElementById('otherId');
+    const startVideoBtn = document.getElementById('startVideoBtn');
+    const endVideoBtn = document.getElementById('endVideoBtn');
+    const shareScreenBtn = document.getElementById('shareScreenBtn');
+    const stopShareBtn = document.getElementById('stopShareBtn');
+    const shareFileBtn = document.getElementById('shareFileBtn');
+    const fileInput = document.getElementById('fileInput');
+    const fileShareSection = document.getElementById('fileShareSection');
+    const callModal = document.getElementById('callModal');
+    const acceptCallBtn = document.getElementById('acceptCallBtn');
+    const rejectCallBtn = document.getElementById('rejectCallBtn');
+    const videoContainer = document.getElementById('videoContainer');
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const callStatus = document.getElementById('callStatus');
+    const typingIndicator = document.getElementById('typingIndicator');
+    const myUserIdDisplay = document.getElementById('myUserIdDisplay');
+    const chatTitle = document.getElementById('chatTitle');
+
+    // Utility Functions
+    const addMessage = (msg, isOwn = false, type = 'text', metadata = {}) => {
+      const d = document.createElement('div');
+      d.className = `message ${isOwn ? 'own' : 'other'}`;
+
+      let content = '';
+      if (type === 'text') {
+        content = `<div class="message-content">${escapeHtml(msg)}</div>`;
+      } else if (type === 'file') {
+        content = `<div class="message-content">
+          <div class="message-file">
+            📎 <a href="${metadata.url}" target="_blank">${escapeHtml(metadata.fileName)}</a>
+            <div style="font-size: 11px; color: #666; margin-top: 4px">${formatFileSize(metadata.fileSize)}</div>
+          </div>
+        </div>`;
+      } else if (type === 'system') {
+        content = `<div class="message-content" style="background: #f0f0f0; color: #666; text-align: center; width: 100%">${msg}</div>`;
+      }
+
+      d.innerHTML = `
+        ${content}
+        <div class="message-time">${new Date().toLocaleTimeString()}</div>
+      `;
+      messagesEl.appendChild(d);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    };
+
+    const escapeHtml = (text) => {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    };
+
+    const formatFileSize = (bytes) => {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    };
+
+    const updateStatus = (text, connected = false) => {
+      statusIndicator.textContent = `Status: ${text}`;
+      statusIndicator.className = `connection-status ${connected ? 'connected' : ''}`;
+    };
+
+    // Socket Connection
+    connectBtn.addEventListener('click', async () => {
+      const token = document.getElementById('tokenInput').value;
+      if (!token) return alert('Token required');
+
+      let connectUrl;
+      if (window.location.protocol === 'file:') {
+        connectUrl = prompt(
+          'Enter server URL (e.g., http://localhost:5001):',
+          'http://localhost:5001'
+        );
+        if (!connectUrl) return alert('Server URL required');
+        connectUrl = connectUrl.replace(/\/$/, '');
+      } else {
+        connectUrl = window.location.origin;
+      }
+
+      console.log('Connecting to', connectUrl);
+      socket = io(connectUrl, {
+        auth: { token },
+        transports: ['websocket', 'polling'],
+        path: '/socket.io'
+      });
+
+      socket.on('connect_error', (err) => {
+        console.error('Connection error:', err);
+        updateStatus(`Error: ${err.message}`, false);
+        alert('Connection error: ' + err.message);
+      });
+
+      socket.on('connect', () => {
+        console.log('Connected:', socket.id);
+        updateStatus('Connected', true);
+        connectBtn.disabled = true;
+        disconnectBtn.disabled = false;
+        startVideoBtn.disabled = false;
+        shareScreenBtn.disabled = false;
+        fileShareSection.style.display = 'flex';
+
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          myId = payload.id || payload._id || payload.userId;
+          myUserIdDisplay.textContent = myId || 'Unknown';
+        } catch (e) {
+          console.error('Token parsing error:', e);
+        }
+      });
+
+      socket.on('joined', (data) => {
+        console.log('Joined chat room:', data);
+        addMessage('Connected to chat', false, 'system');
+      });
+
+      socket.on('message', (msg) => {
+        addMessage(msg.text, msg.from === myId);
+      });
+
+      // Video call events
+      socket.on('callIncoming', (callData) => {
+        console.log('Incoming call:', callData);
+        currentCallId = callData.callId;
+        currentCall = callData;
+        document.getElementById('callFromUser').textContent = `Call from ${callData.from}`;
+        callModal.classList.add('active');
+      });
+
+      socket.on('callAccepted', (data) => {
+        console.log('Call accepted:', data);
+        callStatus.textContent = 'Call accepted, establishing connection...';
+        startVideoCall();
+      });
+
+      socket.on('callRejected', (data) => {
+        console.log('Call rejected:', data);
+        addMessage(`Call rejected by ${data.rejectedBy}`, false, 'system');
+        endCall();
+      });
+
+      socket.on('callEnded', (data) => {
+        console.log('Call ended:', data);
+        addMessage(`Call ended by ${data.endedBy}`, false, 'system');
+        endCall();
+      });
+
+      socket.on('offer', async (data) => {
+        console.log('Received offer:', data);
+        try {
+          await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+          const answer = await peerConnection.createAnswer();
+          await peerConnection.setLocalDescription(answer);
+          socket.emit('answer', {
+            to: data.from,
+            answer: peerConnection.localDescription,
+            callId: data.callId
+          });
+        } catch (err) {
+          console.error('Error handling offer:', err);
+        }
+      });
+
+      socket.on('answer', async (data) => {
+        console.log('Received answer:', data);
+        try {
+          await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+        } catch (err) {
+          console.error('Error handling answer:', err);
+        }
+      });
+
+      socket.on('iceCandidate', async (data) => {
+        try {
+          if (data.candidate) {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+          }
+        } catch (err) {
+          console.error('Error adding ICE candidate:', err);
+        }
+      });
+
+      socket.on('mediaShareStarted', (data) => {
+        console.log('Media share started:', data);
+        addMessage(`${data.from} is sharing ${data.type}`, false, 'system');
+        mediaShareActive = true;
+      });
+
+      socket.on('mediaShareStopped', (data) => {
+        console.log('Media share stopped:', data);
+        addMessage('Media share ended', false, 'system');
+        mediaShareActive = false;
+      });
+
+      socket.on('fileShared', (data) => {
+        console.log('File shared:', data);
+        addMessage(`Shared file`, false, 'file', data);
+      });
+
+      socket.on('userTyping', (data) => {
+        if (data.isTyping && data.from !== myId) {
+          typingIndicator.style.display = 'block';
+          setTimeout(() => {
+            typingIndicator.style.display = 'none';
+          }, 2000);
+        }
+      });
+
+      socket.on('disconnect', () => {
+        console.log('Disconnected');
+        updateStatus('Disconnected', false);
+        connectBtn.disabled = false;
+        disconnectBtn.disabled = true;
+        startVideoBtn.disabled = true;
+        endVideoBtn.style.display = 'none';
+        shareScreenBtn.disabled = true;
+        stopShareBtn.style.display = 'none';
+        fileShareSection.style.display = 'none';
+      });
+    });
+
+    disconnectBtn.addEventListener('click', () => {
+      if (socket) socket.disconnect();
+    });
+
+    joinBtn.addEventListener('click', () => {
+      const otherId = otherIdInput.value;
+      if (!socket) return alert('Connect first');
+      if (!otherId) return alert('Enter other user ID');
+      socket.emit('joinChat', { otherId });
+      chatTitle.textContent = `Chat with ${otherId}`;
+    });
+
+    sendBtn.addEventListener('click', () => {
+      const text = messageInput.value;
+      const to = otherIdInput.value;
+      if (!socket) return alert('Connect first');
+      if (!to) return alert('Select a user to chat with');
+      if (!text) return alert('Enter a message');
+      socket.emit('message', { to, text });
+      addMessage(text, true);
+      messageInput.value = '';
+      typingIndicator.style.display = 'none';
+    });
+
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendBtn.click();
+      }
+      socket?.emit('typing', { to: otherIdInput.value, isTyping: true });
+    });
+
+    // Video Call Functions
+    startVideoBtn.addEventListener('click', async () => {
+      const to = otherIdInput.value;
+      if (!to) return alert('Select a user to call');
+      if (peerConnection) return alert('Call already in progress');
+
+      currentCallId = 'call_' + Date.now();
+      currentCall = { to, callId: currentCallId };
+
+      socket.emit('initiateCall', { to, callId: currentCallId });
+      addMessage(`Calling ${to}...`, false, 'system');
+      callStatus.textContent = 'Calling...';
+    });
+
+    endVideoBtn.addEventListener('click', () => {
+      endCall();
+    });
+
+    acceptCallBtn.addEventListener('click', async () => {
+      callModal.classList.remove('active');
+      socket.emit('acceptCall', {
+        callId: currentCallId,
+        from: currentCall.from
+      });
+      startVideoCall();
+    });
+
+    rejectCallBtn.addEventListener('click', () => {
+      callModal.classList.remove('active');
+      socket.emit('rejectCall', {
+        callId: currentCallId,
+        from: currentCall.from
+      });
+      addMessage(`Rejected call from ${currentCall.from}`, false, 'system');
+    });
+
+    async function startVideoCall() {
+      try {
+        if (!peerConnection) {
+          peerConnection = new RTCPeerConnection(peerConfig);
+
+          peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+              socket.emit('iceCandidate', {
+                to: currentCall.to || currentCall.from,
+                candidate: event.candidate,
+                callId: currentCallId
+              });
+            }
+          };
+
+          peerConnection.ontrack = (event) => {
+            console.log('Receiving remote track:', event);
+            remoteStream = event.streams[0];
+            remoteVideo.srcObject = remoteStream;
+          };
+
+          peerConnection.onconnectionstatechange = () => {
+            console.log('Connection state:', peerConnection.connectionState);
+            if (peerConnection.connectionState === 'connected') {
+              callStatus.textContent = 'Connected';
+            }
+          };
+        }
+
+        if (!localStream) {
+          localStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+            audio: true
+          });
+          localVideo.srcObject = localStream;
+
+          localStream.getTracks().forEach((track) => {
+            peerConnection.addTrack(track, localStream);
+          });
+        }
+
+        videoContainer.style.display = 'block';
+        startVideoBtn.style.display = 'none';
+        endVideoBtn.style.display = 'inline-block';
+
+        if (currentCall.to) {
+          const offer = await peerConnection.createOffer();
+          await peerConnection.setLocalDescription(offer);
+          socket.emit('offer', {
+            to: currentCall.to,
+            offer: peerConnection.localDescription,
+            callId: currentCallId
+          });
+        }
+      } catch (err) {
+        console.error('Error starting video call:', err);
+        alert('Error starting call: ' + err.message);
+      }
+    }
+
+    function endCall() {
+      if (socket && currentCallId && currentCall.to) {
+        socket.emit('endCall', {
+          callId: currentCallId,
+          to: currentCall.to || currentCall.from
+        });
+      }
+
+      if (localStream) {
+        localStream.getTracks().forEach((track) => track.stop());
+        localStream = null;
+      }
+
+      if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+      }
+
+      videoContainer.style.display = 'none';
+      startVideoBtn.style.display = 'inline-block';
+      endVideoBtn.style.display = 'none';
+      localVideo.srcObject = null;
+      remoteVideo.srcObject = null;
+      currentCallId = null;
+      currentCall = null;
+    }
+
+    // Screen Share
+    shareScreenBtn.addEventListener('click', async () => {
+      try {
+        const to = otherIdInput.value;
+        if (!to) return alert('Select a user first');
+
+        if (!screenStream) {
+          screenStream = await navigator.mediaDevices.getDisplayMedia({
+            video: { cursor: 'always' },
+            audio: false
+          });
+
+          const mediaId = 'screen_' + Date.now();
+          socket.emit('startMediaShare', {
+            to,
+            mediaId,
+            type: 'screen',
+            metadata: { displayName: 'Screen Share' }
+          });
+
+          stopShareBtn.style.display = 'inline-block';
+          shareScreenBtn.style.display = 'none';
+
+          screenStream.getVideoTracks()[0].onended = () => {
+            stopScreenShare();
+          };
+
+          addMessage('Started sharing screen', false, 'system');
+        }
+      } catch (err) {
+        if (err.name !== 'NotAllowedError') {
+          console.error('Error sharing screen:', err);
+          alert('Error: ' + err.message);
+        }
+      }
+    });
+
+    function stopScreenShare() {
+      if (screenStream) {
+        screenStream.getTracks().forEach((track) => track.stop());
+        screenStream = null;
+      }
+
+      stopShareBtn.style.display = 'none';
+      shareScreenBtn.style.display = 'inline-block';
+
+      const to = otherIdInput.value;
+      socket?.emit('stopMediaShare', {
+        to,
+        mediaId: 'screen_share'
+      });
+
+      addMessage('Stopped sharing screen', false, 'system');
+    }
+
+    stopShareBtn.addEventListener('click', () => {
+      stopScreenShare();
+    });
+
+    // File Share
+    shareFileBtn.addEventListener('click', async () => {
+      const file = fileInput.files[0];
+      const to = otherIdInput.value;
+
+      if (!to) return alert('Select a user first');
+      if (!file) return alert('Select a file');
+
+      const fileId = 'file_' + Date.now();
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        socket.emit('shareFile', {
+          to,
+          fileId,
+          fileName: file.name,
+          fileSize: file.size,
+          mimeType: file.type,
+          fileData: e.target.result
+        });
+
+        addMessage(`Shared file: ${file.name}`, true);
+        fileInput.value = '';
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
+  </script>
+</body>
+</html>

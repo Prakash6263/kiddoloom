@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ | Kiddo Loom</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            background: #f9f9f9; 
+            color: #222; 
+            line-height: 1.6;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: auto; 
+            background: #fff; 
+            padding: 40px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+        }
+        h1 { 
+            color: #2c3e50; 
+            text-align: center; 
+            margin-bottom: 10px; 
+        }
+        p.subtitle {
+            text-align: center;
+            color: #555;
+            font-size: 1em;
+            margin-bottom: 30px;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+        }
+
+        .faq-question {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            color: #34495e;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        .faq-question:hover {
+            color: #3498db;
+        }
+
+        .faq-answer {
+            display: none;
+            margin-top: 10px;
+            color: #444;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+
+        .arrow {
+            transition: transform 0.3s;
+        }
+
+        .faq-item.active .arrow {
+            transform: rotate(90deg);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 0.9em;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Frequently Asked Questions</h1>
+        <p class="subtitle">Tap a question to see the answer</p>
+
+        <div class="faq-item">
+            <div class="faq-question">1. What is Kiddo Loom? <span class="arrow">▶</span></div>
+            <div class="faq-answer"><strong>Kiddo Loom</strong> is a fun and engaging educational platform that helps children learn through creative activities and interactive lessons.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">2. How do I create an account? <span class="arrow">▶</span></div>
+            <div class="faq-answer">You can sign up directly from the Kiddo Loom app or website using your email address or supported social login options.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">3. Is Kiddo Loom free to use? <span class="arrow">▶</span></div>
+            <div class="faq-answer">Yes! Kiddo Loom offers free features for everyone. For a richer experience, you can upgrade to a premium plan to unlock more tools and personalized lessons.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">4. How can parents monitor their child’s progress? <span class="arrow">▶</span></div>
+            <div class="faq-answer">Parents can use the Parent Dashboard to see detailed progress reports, learning trends, and recommended next activities.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">5. What devices support Kiddo Loom? <span class="arrow">▶</span></div>
+            <div class="faq-answer">Kiddo Loom works on Android, iOS, and desktop browsers—allowing access from phones, tablets, or computers.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">6. How do I cancel my subscription? <span class="arrow">▶</span></div>
+            <div class="faq-answer">You can cancel your subscription anytime from your app settings or by contacting our support team at <a href="mailto:support@kiddoloom.com">support@kiddoloom.com</a>.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">7. Is my data safe with Kiddo Loom? <span class="arrow">▶</span></div>
+            <div class="faq-answer">Absolutely. We use secure encryption and follow strict privacy standards to protect your information. Read our <a href="privacy.html">Privacy Policy</a> for details.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">8. How can I contact support? <span class="arrow">▶</span></div>
+            <div class="faq-answer">You can reach our friendly support team anytime at <a href="mailto:support@kiddoloom.com">support@kiddoloom.com</a>.</div>
+        </div>
+
+        <footer>
+            &copy; 2025 Kiddo Loom. All rights reserved.
+        </footer>
+    </div>
+
+    <script>
+        const faqItems = document.querySelectorAll('.faq-item');
+
+        faqItems.forEach(item => {
+            item.querySelector('.faq-question').addEventListener('click', () => {
+                faqItems.forEach(i => i !== item && i.classList.remove('active'));
+                item.classList.toggle('active');
+            });
+        });
+    </script>
+</body>
+</html>

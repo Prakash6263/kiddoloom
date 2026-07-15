@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Parent/Teacher Chat Demo</title>
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 20px;
+      }
+      #messages {
+        border: 1px solid #ddd;
+        padding: 10px;
+        height: 300px;
+        overflow: auto;
+      }
+      #messages div {
+        margin-bottom: 8px;
+      }
+      #me {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Parent / Teacher Chat (demo)</h2>
+
+    <p>
+      This demo connects with a JWT. Paste a valid token when prompted. The
+      server will use the token to determine your user id.
+    </p>
+
+    <div>
+      <button id="connectBtn">Connect</button>
+      <button id="disconnectBtn" disabled>Disconnect</button>
+    </div>
+
+    <div style="margin-top: 10px">
+      <label>Chat with (other user id): <input id="otherId" /></label>
+      <button id="joinBtn">Join Chat</button>
+    </div>
+
+    <div id="messages"></div>
+
+    <div style="margin-top: 10px">
+      <input id="text" style="width: 70%" />
+      <button id="sendBtn">Send</button>
+    </div>
+
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script>
+      let socket;
+      let myId = null;
+
+      const messagesEl = document.getElementById("messages");
+      const addMessage = (msg, me) => {
+        const d = document.createElement("div");
+        d.innerHTML =
+          "<span " +
+          (me ? 'id="me"' : "") +
+          ">" +
+          (me ? "Me" : msg.from) +
+          "</span>: " +
+          msg.text +
+          " <small>(" +
+          new Date(msg.createdAt).toLocaleTimeString() +
+          ")</small>";
+        messagesEl.appendChild(d);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      };
+
+      document
+        .getElementById("connectBtn")
+        .addEventListener("click", async () => {
+          const token = prompt(
+            'Paste your JWT (Bearer token without "Bearer ")'
+          );
+          if (!token) return alert("Token required");
+
+          // Choose connect URL robustly. If this page was opened via file://, prompt for server URL
+          // (otherwise window.location.origin will be "file" and produce ws://file/... errors).
+          let connectUrl;
+          if (window.location.protocol === "file:") {
+            connectUrl = prompt(
+              "This demo was opened from file://. Enter the server URL (e.g. http://localhost:5001):",
+              "http://localhost:5001"
+            );
+            if (!connectUrl)
+              return alert(
+                "Server URL required to connect when opening page from file system."
+              );
+            connectUrl = connectUrl.replace(/\/$/, "");
+          } else {
+            // Use origin (http(s)://host:port). No need to strip path.
+            connectUrl = window.location.origin;
+          }
+
+          console.log("Connecting socket.io to", connectUrl);
+          socket = io(connectUrl, {
+            auth: { token },
+            transports: ["websocket", "polling"],
+            path: "/socket.io",
+          });
+
+          socket.on("connect_error", (err) => {
+            console.error("Socket connect_error", err);
+            alert("Connection error: " + (err && err.message));
+          });
+
+          socket.on("connect", () => {
+            console.log("connected", socket.id);
+            document.getElementById("connectBtn").disabled = true;
+            document.getElementById("disconnectBtn").disabled = false;
+          });
+
+          socket.on("joined", (data) => {
+            console.log("joined", data);
+          });
+
+          socket.on("message", (msg) => {
+            addMessage(msg, msg.from === myId);
+          });
+
+          // attempt to read my id from token payload (naive)
+          try {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            myId = payload.id || payload._id || payload.userId;
+          } catch (e) {
+            /* ignore */
+          }
+        });
+
+      document.getElementById("disconnectBtn").addEventListener("click", () => {
+        if (socket) socket.disconnect();
+        document.getElementById("connectBtn").disabled = false;
+        document.getElementById("disconnectBtn").disabled = true;
+      });
+
+      document.getElementById("joinBtn").addEventListener("click", () => {
+        const otherId = document.getElementById("otherId").value;
+        if (!socket) return alert("Connect first");
+        if (!otherId) return alert("Enter other user id");
+        socket.emit("joinChat", { otherId });
+      });
+
+      document.getElementById("sendBtn").addEventListener("click", () => {
+        const text = document.getElementById("text").value;
+        const to = document.getElementById("otherId").value;
+        if (!socket) return alert("Connect first");
+        if (!to) return alert("Enter other user id");
+        socket.emit("message", { to, text });
+        document.getElementById("text").value = "";
+      });
+    </script>
+  </body>
+</html>
